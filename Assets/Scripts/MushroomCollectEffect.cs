@@ -11,6 +11,12 @@ public class MushroomCollectEffect : MonoBehaviour
         go.transform.position = position;
 
         var ps = go.AddComponent<ParticleSystem>();
+        var renderer = go.GetComponent<ParticleSystemRenderer>();
+        var shader = Shader.Find("Particles/Standard Unlit");
+        if (shader != null)
+        {
+            renderer.material = new Material(shader) { color = new Color(0.9f, 0.7f, 0.35f, 1f) };
+        }
         var main = ps.main;
         main.duration = 0.8f;
         main.startLifetime = 0.6f;

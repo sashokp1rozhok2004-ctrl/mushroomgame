@@ -6,13 +6,53 @@ public class FirstPersonHands : MonoBehaviour
     public Transform leftHand, rightHand;
     Vector3 leftHome, rightHome;
     Quaternion leftRot, rightRot;
+    Transform handsRoot;
+
+    Transform FindDescendant(Transform root, string wantedName)
+    {
+        if (!root) return null;
+        if (root.name == wantedName) return root;
+        for (int i = 0; i < root.childCount; i++)
+        {
+            var found = FindDescendant(root.GetChild(i), wantedName);
+            if (found) return found;
+        }
+        return null;
+    }
+
     void Start()
     {
+        if (leftHand != null)
+        {
+            var root = leftHand;
+            while (root.parent && root.name != "Hands") root = root.parent;
+            if (root.name == "Hands") handsRoot = root;
+        }
+        if (!handsRoot && rightHand != null)
+        {
+            var root = rightHand;
+            while (root.parent && root.name != "Hands") root = root.parent;
+            if (root.name == "Hands") handsRoot = root;
+        }
+        if (handsRoot)
+        {
+            handsRoot.localPosition = new Vector3(0f, -0.18f, 0.48f);
+            handsRoot.localScale = Vector3.one * 0.48f;
+            foreach (var renderer in handsRoot.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                renderer.enabled = true;
+                renderer.updateWhenOffscreen = true;
+            }
+            leftHand = FindDescendant(handsRoot, "hand.L") ?? FindDescendant(handsRoot, "forearm.L") ?? leftHand;
+            rightHand = FindDescendant(handsRoot, "hand.R") ?? FindDescendant(handsRoot, "forearm.R") ?? rightHand;
+        }
+        if (!leftHand || !rightHand) return;
         leftHome=leftHand.localPosition; rightHome=rightHand.localPosition;
         leftRot=leftHand.localRotation; rightRot=rightHand.localRotation;
     }
     public IEnumerator PlayPickup()
     {
+        if (!leftHand || !rightHand) yield break;
         float t=0;
         while(t<1f)
         {

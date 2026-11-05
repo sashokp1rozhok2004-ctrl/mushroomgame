@@ -6,7 +6,9 @@ public class FirstPersonPlayer : MonoBehaviour
     public MushroomGame game;
     public float speed = 4f;
     public float runMultiplier = 1.8f;
-    public float jumpHeight = 1.2f; // Reduced from 2.2f - more realistic jump, won't fly above trees
+    public float jumpHeight = 1.2f;
+    public float gravity = -22f;
+    public float playableHalfSize = 72f;
     public float sensitivity = 2f;
     float pitch, vertical;
     CharacterController controller;
@@ -19,7 +21,7 @@ public class FirstPersonPlayer : MonoBehaviour
         controller.height = 1.8f;
         controller.radius = 0.35f;
         controller.center = Vector3.up * 0.9f;
-        spawnPoint = new Vector3(transform.position.x, 1.1f, transform.position.z);
+        spawnPoint = new Vector3(transform.position.x, 0f, transform.position.z);
         transform.position = spawnPoint;
         var ground = GameObject.Find("Ground");
         if (ground != null)
@@ -27,13 +29,13 @@ public class FirstPersonPlayer : MonoBehaviour
             var meshCollider = ground.GetComponent<MeshCollider>();
             if (meshCollider != null) meshCollider.enabled = false;
         }
-        var oldFloors = GameObject.FindObjectsByType<GameObject>(FindObjectsSortMode.None);
-        foreach (var oldFloor in oldFloors)
-            if (oldFloor.name == "RuntimeGroundCollider") Destroy(oldFloor);
-        var floor = new GameObject("RuntimeGroundCollider");
-        var floorCollider = floor.AddComponent<BoxCollider>();
-        floorCollider.center = new Vector3(0f, -1f, 0f);
-        floorCollider.size = new Vector3(500f, 2f, 500f);
+        if (GameObject.Find("GroundPhysics") == null && GameObject.Find("RuntimeGroundCollider") == null)
+        {
+            var floor = new GameObject("RuntimeGroundCollider");
+            var floorCollider = floor.AddComponent<BoxCollider>();
+            floorCollider.center = new Vector3(0f, -1f, 0f);
+            floorCollider.size = new Vector3(500f, 2f, 500f);
+        }
         if (game == null) game = GetComponent<MushroomGame>();
         if (head == null)
         {
@@ -46,10 +48,10 @@ public class FirstPersonPlayer : MonoBehaviour
     void Update()
     {
         if(game != null && game.Won) return;
-        if (transform.position.y < FloorHeight)
+        if (transform.position.y < -10f)
         {
             controller.enabled = false;
-            transform.position = new Vector3(transform.position.x, FloorHeight, transform.position.z);
+            transform.position = spawnPoint;
             vertical = 0f;
             controller.enabled = true;
         }
@@ -58,7 +60,8 @@ public class FirstPersonPlayer : MonoBehaviour
         transform.Rotate(0,Input.GetAxis("Mouse X")*sensitivity,0);
         pitch=Mathf.Clamp(pitch-Input.GetAxis("Mouse Y")*sensitivity,-85,85);
         if(head != null) head.localRotation=Quaternion.Euler(pitch,0,0);
-        bool grounded=true;
+        bool grounded = controller.isGrounded;
+        if (grounded && vertical < 0f) vertical = -2f;
         var input = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
         if (Input.GetKey(KeyCode.A)) input.x = -1f;
         if (Input.GetKey(KeyCode.D)) input.x = 1f;
@@ -66,12 +69,21 @@ public class FirstPersonPlayer : MonoBehaviour
         if (Input.GetKey(KeyCode.W)) input.y = 1f;
         var move=Vector3.ClampMagnitude(transform.right*input.x+transform.forward*input.y,1)*speed;
         if(Input.GetKey(KeyCode.LeftShift)) move*=runMultiplier;
-        if(Input.GetKeyDown(KeyCode.Space)) vertical=Mathf.Sqrt(jumpHeight*-2f*Physics.gravity.y);
-        vertical+=Physics.gravity.y*Time.deltaTime;
-        var position = transform.position + move * Time.deltaTime;
-        position.y += vertical * Time.deltaTime;
-        if (position.y < FloorHeight) { position.y = FloorHeight; vertical = 0f; }
-        transform.position = position;
+        if (Input.GetKeyDown(KeyCode.Space) && grounded)
+            vertical = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        vertical += gravity * Time.deltaTime;
+        controller.Move((move + Vector3.up * vertical) * Time.deltaTime);
+
+        // Keep the player inside the designed forest clearing even if a tree mesh has a gap.
+        Vector3 p = transform.position;
+        float clampedX = Mathf.Clamp(p.x, -playableHalfSize, playableHalfSize);
+        float clampedZ = Mathf.Clamp(p.z, -playableHalfSize, playableHalfSize);
+        if (!Mathf.Approximately(p.x, clampedX) || !Mathf.Approximately(p.z, clampedZ))
+        {
+            controller.enabled = false;
+            transform.position = new Vector3(clampedX, spawnPoint.y, clampedZ);
+            controller.enabled = true;
+        }
     }
 }
 
