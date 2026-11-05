@@ -13,7 +13,6 @@ public class FirstPersonPlayer : MonoBehaviour
     float pitch, vertical;
     CharacterController controller;
     Vector3 spawnPoint;
-    const float FloorHeight = 1.0f;
     void Start()
     {
         controller=GetComponent<CharacterController>();
@@ -57,9 +56,12 @@ public class FirstPersonPlayer : MonoBehaviour
         }
         if(Input.GetMouseButtonDown(0)) LockCursor();
         // Movement must remain available while the Game view is acquiring mouse focus.
-        transform.Rotate(0,Input.GetAxis("Mouse X")*sensitivity,0);
-        pitch=Mathf.Clamp(pitch-Input.GetAxis("Mouse Y")*sensitivity,-85,85);
-        if(head != null) head.localRotation=Quaternion.Euler(pitch,0,0);
+        if (Cursor.lockState == CursorLockMode.Locked)
+        {
+            transform.Rotate(0,Input.GetAxis("Mouse X")*sensitivity,0);
+            pitch=Mathf.Clamp(pitch-Input.GetAxis("Mouse Y")*sensitivity,-85,85);
+            if(head != null) head.localRotation=Quaternion.Euler(pitch,0,0);
+        }
         bool grounded = controller.isGrounded;
         if (grounded && vertical < 0f) vertical = -2f;
         var input = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
@@ -81,7 +83,7 @@ public class FirstPersonPlayer : MonoBehaviour
         if (!Mathf.Approximately(p.x, clampedX) || !Mathf.Approximately(p.z, clampedZ))
         {
             controller.enabled = false;
-            transform.position = new Vector3(clampedX, spawnPoint.y, clampedZ);
+            transform.position = new Vector3(clampedX, p.y, clampedZ);
             controller.enabled = true;
         }
     }

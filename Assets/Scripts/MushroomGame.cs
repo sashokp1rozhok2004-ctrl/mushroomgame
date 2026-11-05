@@ -19,7 +19,7 @@ public class MushroomGame : MonoBehaviour
     {
         mushroom = null;
         if (!view) return false;
-        int count = Physics.SphereCastNonAlloc(view.transform.position, .22f, view.transform.forward, collectHits, 3f);
+        int count = Physics.SphereCastNonAlloc(view.transform.position, .22f, view.transform.forward, collectHits, 3f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide);
         float nearest = float.PositiveInfinity;
         for (int i = 0; i < count; i++)
         {
@@ -36,10 +36,11 @@ public class MushroomGame : MonoBehaviour
     }
     void Update()
     {
-        canCollect = CanCollect(out targetedMushroom);
-        if (!Won && !collecting && Input.GetKeyDown(KeyCode.E) && canCollect)
+        if (!Won)
         {
-            StartCoroutine(CollectMushroom(targetedMushroom));
+            canCollect = CanCollect(out targetedMushroom);
+            if (!collecting && Input.GetKeyDown(KeyCode.E) && canCollect)
+                StartCoroutine(CollectMushroom(targetedMushroom));
         }
         if (Input.GetKeyDown(KeyCode.Escape)) { Cursor.lockState = CursorLockMode.None; Cursor.visible = true; }
         if (!Won && Input.GetMouseButtonDown(0)) { Cursor.lockState = CursorLockMode.Locked; Cursor.visible = false; }
@@ -63,12 +64,12 @@ public class MushroomGame : MonoBehaviour
         if (labelStyle == null)
         {
             labelStyle = new GUIStyle(GUI.skin.label) { fontSize = 23, normal = { textColor = Color.white } };
-            instructionStyle = new GUIStyle(labelStyle) { fontSize = 15 };
+            instructionStyle = new GUIStyle(labelStyle) { fontSize = 13, wordWrap = true };
             centerStyle = new GUIStyle(labelStyle) { alignment = TextAnchor.MiddleCenter, fontSize = 34 };
         }
-        GUI.Box(new Rect(18,18,390,105), "");
+        GUI.Box(new Rect(18,18,440,112), "");
         GUI.Label(new Rect(32,26,360,40), $"Грибы: {collected} / {target}", labelStyle);
-        GUI.Label(new Rect(32,65,365,45), "WASD — ходить · Shift — бег · Space — прыжок · E — собрать", instructionStyle);
+        GUI.Label(new Rect(32,65,410,45), "WASD — ходить · Shift — бег · Space — прыжок · E — собрать", instructionStyle);
         if (!Won)
         {
             GUI.Label(new Rect(Screen.width/2-5,Screen.height/2-15,30,30), "+", labelStyle);
