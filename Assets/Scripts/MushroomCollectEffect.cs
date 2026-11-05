@@ -5,19 +5,26 @@ using UnityEngine;
 /// </summary>
 public class MushroomCollectEffect : MonoBehaviour
 {
+    static Material sharedParticleMaterial;
+
     public static void PlayAt(Vector3 position)
     {
         var go = new GameObject("Collect Effect");
         go.transform.position = position;
 
         var ps = go.AddComponent<ParticleSystem>();
+        ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         var renderer = go.GetComponent<ParticleSystemRenderer>();
         var shader = Shader.Find("Particles/Standard Unlit");
         if (shader != null)
         {
-            renderer.material = new Material(shader) { color = new Color(0.9f, 0.7f, 0.35f, 1f) };
+            if (sharedParticleMaterial == null)
+                sharedParticleMaterial = new Material(shader) { name = "MushroomCollectParticleMaterial", color = new Color(0.9f, 0.7f, 0.35f, 1f) };
+            renderer.sharedMaterial = sharedParticleMaterial;
         }
         var main = ps.main;
+        main.playOnAwake = false;
+        main.loop = false;
         main.duration = 0.8f;
         main.startLifetime = 0.6f;
         main.startSpeed = 2f;

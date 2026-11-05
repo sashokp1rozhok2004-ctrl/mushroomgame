@@ -35,11 +35,11 @@ public class FirstPersonHands : MonoBehaviour
         }
         if (handsRoot)
         {
-            handsRoot.localPosition = new Vector3(0f, -0.18f, 0.48f);
             foreach (var renderer in handsRoot.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
                 renderer.enabled = true;
                 renderer.updateWhenOffscreen = true;
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             }
             leftHand = FindDescendant(handsRoot, "forearm.L") ?? FindDescendant(handsRoot, "upper_arm.L") ?? FindDescendant(handsRoot, "hand.L") ?? leftHand;
             rightHand = FindDescendant(handsRoot, "forearm.R") ?? FindDescendant(handsRoot, "upper_arm.R") ?? FindDescendant(handsRoot, "hand.R") ?? rightHand;

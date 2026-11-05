@@ -28,13 +28,6 @@ public class FirstPersonPlayer : MonoBehaviour
             var meshCollider = ground.GetComponent<MeshCollider>();
             if (meshCollider != null) meshCollider.enabled = false;
         }
-        if (GameObject.Find("GroundPhysics") == null && GameObject.Find("RuntimeGroundCollider") == null)
-        {
-            var floor = new GameObject("RuntimeGroundCollider");
-            var floorCollider = floor.AddComponent<BoxCollider>();
-            floorCollider.center = new Vector3(0f, -1f, 0f);
-            floorCollider.size = new Vector3(500f, 2f, 500f);
-        }
         if (game == null) game = GetComponent<MushroomGame>();
         if (head == null)
         {
@@ -78,12 +71,11 @@ public class FirstPersonPlayer : MonoBehaviour
 
         // Keep the player inside the designed forest clearing even if a tree mesh has a gap.
         Vector3 p = transform.position;
-        float clampedX = Mathf.Clamp(p.x, -playableHalfSize, playableHalfSize);
-        float clampedZ = Mathf.Clamp(p.z, -playableHalfSize, playableHalfSize);
-        if (!Mathf.Approximately(p.x, clampedX) || !Mathf.Approximately(p.z, clampedZ))
+        Vector2 flat = Vector2.ClampMagnitude(new Vector2(p.x, p.z), playableHalfSize);
+        if (!Mathf.Approximately(p.x, flat.x) || !Mathf.Approximately(p.z, flat.y))
         {
             controller.enabled = false;
-            transform.position = new Vector3(clampedX, p.y, clampedZ);
+            transform.position = new Vector3(flat.x, p.y, flat.y);
             controller.enabled = true;
         }
     }

@@ -61,6 +61,11 @@ public class MushroomGame : MonoBehaviour
     }
     void OnGUI()
     {
+        float uiScale = Mathf.Max(0.01f, Mathf.Min(Screen.height / 720f, Screen.width / 478f));
+        Matrix4x4 previousMatrix = GUI.matrix;
+        GUI.matrix = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, Vector3.one * uiScale);
+        float scaledWidth = Screen.width / uiScale;
+        float scaledHeight = Screen.height / uiScale;
         if (labelStyle == null)
         {
             labelStyle = new GUIStyle(GUI.skin.label) { fontSize = 23, normal = { textColor = Color.white } };
@@ -72,16 +77,17 @@ public class MushroomGame : MonoBehaviour
         GUI.Label(new Rect(32,65,410,45), "WASD — ходить · Shift — бег · Space — прыжок · E — собрать", instructionStyle);
         if (!Won)
         {
-            GUI.Label(new Rect(Screen.width/2-5,Screen.height/2-15,30,30), "+", labelStyle);
-            if(canCollect) GUI.Label(new Rect(Screen.width/2-125,Screen.height/2+35,280,40), "E — собрать гриб", instructionStyle);
+            GUI.Label(new Rect(scaledWidth/2-5,scaledHeight/2-15,30,30), "+", labelStyle);
+            if(canCollect) GUI.Label(new Rect(scaledWidth/2-125,scaledHeight/2+35,280,40), "E — собрать гриб", instructionStyle);
         }
         else
         {
-            var box = new Rect(Screen.width/2-230,Screen.height/2-125,460,250);
+            var box = new Rect(scaledWidth/2-230,scaledHeight/2-125,460,250);
             GUI.Box(box, "");
             GUI.Label(new Rect(box.x,box.y+25,460,70), "ПОБЕДА!", centerStyle);
             GUI.Label(new Rect(box.x,box.y+95,460,40), "Все грибы собраны", instructionStyle);
-            if(GUI.Button(new Rect(box.x+120,box.y+165,220,50), "Играть снова")) SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            if(GUI.Button(new Rect(box.x+120,box.y+165,220,50), "Играть снова")) SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
+        GUI.matrix = previousMatrix;
     }
 }
